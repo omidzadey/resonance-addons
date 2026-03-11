@@ -1,0 +1,14 @@
+{
+  "name": "@resonance-addons/spotify-addon",
+  "module": "src/index.ts",
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "dev": "bun --hot src/index.ts"
+  },
+  "type": "module",
+  "private": true,
+  "dependencies": {
+    "@resonance-addons/shared": "workspace:*",
+    "cuimp": "^1.10.0"
+  }
+}

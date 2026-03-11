@@ -1,0 +1,46 @@
+x-healthcheck: &healthcheck
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 10s
+
+services:
+  ytm-addon:
+    build: .
+    command: ["packages/ytm-addon/src/index.ts"]
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "bun", "--eval", "fetch('http://localhost:3000/health').then(r=>r.ok?process.exit(0):process.exit(1)).catch(()=>process.exit(1))"]
+
+  am-addon:
+    build: .
+    command: ["packages/am-addon/src/index.ts"]
+    ports:
+      - "3001:3001"
+    restart: unless-stopped
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "bun", "--eval", "fetch('http://localhost:3001/health').then(r=>r.ok?process.exit(0):process.exit(1)).catch(()=>process.exit(1))"]
+
+  spotify-addon:
+    build: .
+    command: ["packages/spotify-addon/src/index.ts"]
+    ports:
+      - "3002:3002"
+    restart: unless-stopped
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "bun", "--eval", "fetch('http://localhost:3002/health').then(r=>r.ok?process.exit(0):process.exit(1)).catch(()=>process.exit(1))"]
+
+  torbox-addon:
+    build: .
+    command: ["packages/torbox-addon/src/index.ts"]
+    ports:
+      - "3003:3003"
+    restart: unless-stopped
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "bun", "--eval", "fetch('http://localhost:3003/health').then(r=>r.ok?process.exit(0):process.exit(1)).catch(()=>process.exit(1))"]

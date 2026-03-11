@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TorBox - Resonance</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0f0f0f; color: #e1e1e1;
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      padding: 1rem;
+    }
+    .container { max-width: 440px; width: 100%; }
+    h1 { font-size: 1.4rem; margin-bottom: 0.25rem; color: #fff; }
+    .subtitle { color: #888; margin-bottom: 1.5rem; font-size: 0.85rem; }
+    label { display: block; margin-bottom: 0.4rem; font-size: 0.85rem; color: #aaa; }
+    input {
+      width: 100%; padding: 0.7rem; border: 1px solid #333; border-radius: 8px;
+      background: #1a1a1a; color: #e1e1e1; font-family: monospace; font-size: 0.85rem;
+      margin-bottom: 1rem;
+    }
+    input:focus { outline: none; border-color: #49de80; }
+    button {
+      width: 100%; padding: 0.7rem; background: #49de80; color: #000;
+      border: none; border-radius: 8px; font-size: 0.95rem; cursor: pointer; font-weight: 600;
+    }
+    button:hover { background: #3bc96e; }
+    .result {
+      margin-top: 1.25rem; padding: 0.75rem; background: #1a1a1a;
+      border: 1px solid #333; border-radius: 8px; display: none;
+    }
+    .result.show { display: block; }
+    .result label { color: #49de80; margin-bottom: 0.25rem; }
+    .result code {
+      display: block; word-break: break-all; font-size: 0.8rem; color: #fff;
+      padding: 0.5rem; background: #0f0f0f; border-radius: 4px; user-select: all;
+    }
+    .steps {
+      margin-top: 1rem; padding: 0.75rem; background: #1a1a1a;
+      border: 1px solid #333; border-radius: 8px; font-size: 0.8rem; color: #aaa; line-height: 1.6;
+    }
+    .steps strong { color: #ccc; }
+    .steps code { display: inline; padding: 2px 4px; background: #0f0f0f; border-radius: 3px; }
+    .steps a { color: #49de80; }
+    .checkbox-row {
+      display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem; cursor: pointer;
+    }
+    .checkbox-row input { width: auto; margin: 0; accent-color: #49de80; }
+    .checkbox-hint { font-size: 0.8rem; color: #666; margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>TorBox</h1>
+    <p class="subtitle">Stream music from cached torrents via TorBox.</p>
+
+    <form id="form">
+      <label for="apiKey">TorBox API Key</label>
+      <input type="text" id="apiKey" placeholder="Paste TorBox API key here">
+
+      <label class="checkbox-row">
+        <input type="checkbox" id="allowUncached">
+        <span>Download uncached torrents</span>
+      </label>
+      <p class="checkbox-hint">Queue uncached torrents so they are ready next time.</p>
+
+      <button type="submit">Generate Addon URL</button>
+    </form>
+
+    <div class="result" id="result">
+      <label>Addon URL:</label>
+      <code id="addonUrl"></code>
+    </div>
+
+    <div class="steps">
+      <strong>Getting your API key:</strong><br>
+      1. Open <a href="https://torbox.app/settings" target="_blank">torbox.app/settings</a> and sign in<br>
+      2. Under Account, click <code>Copy API Key</code>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById("form");
+    const apiKeyEl = document.getElementById("apiKey");
+    const allowUncachedEl = document.getElementById("allowUncached");
+    const resultEl = document.getElementById("result");
+    const urlEl = document.getElementById("addonUrl");
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const apiKey = apiKeyEl.value.trim();
+      if (!apiKey) return alert("Enter your TorBox API key");
+
+      const config = { apiKey, allowUncached: allowUncachedEl.checked };
+      const encoded = btoa(JSON.stringify(config));
+      const url = `{{BASE_URL}}/${encoded}/manifest.json`;
+      urlEl.textContent = url;
+      resultEl.classList.add("show");
+    });
+  </script>
+</body>
+</html>

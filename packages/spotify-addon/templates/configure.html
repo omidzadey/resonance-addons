@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spotify - Resonance</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0f0f0f; color: #e1e1e1;
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      padding: 1rem;
+    }
+    .container { max-width: 440px; width: 100%; }
+    h1 { font-size: 1.4rem; margin-bottom: 0.25rem; color: #fff; }
+    .subtitle { color: #888; margin-bottom: 1.5rem; font-size: 0.85rem; }
+    label { display: block; margin-bottom: 0.4rem; font-size: 0.85rem; color: #aaa; }
+    input {
+      width: 100%; padding: 0.7rem; border: 1px solid #333; border-radius: 8px;
+      background: #1a1a1a; color: #e1e1e1; font-family: monospace; font-size: 0.85rem;
+      margin-bottom: 1rem;
+    }
+    input:focus { outline: none; border-color: #1DB954; }
+    button {
+      width: 100%; padding: 0.7rem; background: #1DB954; color: #fff;
+      border: none; border-radius: 8px; font-size: 0.95rem; cursor: pointer; font-weight: 600;
+    }
+    button:hover { background: #1aa34a; }
+    .result {
+      margin-top: 1.25rem; padding: 0.75rem; background: #1a1a1a;
+      border: 1px solid #333; border-radius: 8px; display: none;
+    }
+    .result.show { display: block; }
+    .result label { color: #1DB954; margin-bottom: 0.25rem; }
+    .result code {
+      display: block; word-break: break-all; font-size: 0.8rem; color: #fff;
+      padding: 0.5rem; background: #0f0f0f; border-radius: 4px; user-select: all;
+    }
+    .steps {
+      margin-top: 1rem; padding: 0.75rem; background: #1a1a1a;
+      border: 1px solid #333; border-radius: 8px; font-size: 0.8rem; color: #aaa; line-height: 1.6;
+    }
+    .steps strong { color: #ccc; }
+    .steps code { display: inline; padding: 2px 4px; background: #0f0f0f; border-radius: 3px; }
+    .steps a { color: #1DB954; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Spotify</h1>
+    <p class="subtitle">Lyrics, metadata, and DJ from your Spotify account.</p>
+
+    <form id="form">
+      <label for="spDc">sp_dc Cookie</label>
+      <input type="text" id="spDc" placeholder="Paste sp_dc cookie value here">
+      <button type="submit">Generate Addon URL</button>
+    </form>
+
+    <div class="result" id="result">
+      <label>Addon URL:</label>
+      <code id="addonUrl"></code>
+    </div>
+
+    <div class="steps">
+      <strong>Getting your cookie:</strong><br>
+      1. Open <a href="https://open.spotify.com" target="_blank">open.spotify.com</a> and sign in<br>
+      2. Open DevTools (F12) > Application > Cookies > <code>https://open.spotify.com</code><br>
+      3. Find <code>sp_dc</code> and copy its value
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById("form");
+    const spDcEl = document.getElementById("spDc");
+    const resultEl = document.getElementById("result");
+    const urlEl = document.getElementById("addonUrl");
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const spDc = spDcEl.value.trim();
+      if (!spDc) return alert("Enter your sp_dc cookie");
+
+      const config = { spDc };
+      const encoded = btoa(JSON.stringify(config));
+      const url = `{{BASE_URL}}/${encoded}/manifest.json`;
+      urlEl.textContent = url;
+      resultEl.classList.add("show");
+    });
+  </script>
+</body>
+</html>

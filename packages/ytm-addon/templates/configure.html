@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouTube Music - Resonance</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0f0f0f; color: #e1e1e1;
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      padding: 1rem;
+    }
+    .container { max-width: 440px; width: 100%; }
+    h1 { font-size: 1.4rem; margin-bottom: 0.25rem; color: #fff; }
+    .subtitle { color: #888; margin-bottom: 1.5rem; font-size: 0.85rem; }
+    label { display: block; margin-bottom: 0.4rem; font-size: 0.85rem; color: #aaa; }
+    input {
+      width: 100%; padding: 0.7rem; border: 1px solid #333; border-radius: 8px;
+      background: #1a1a1a; color: #e1e1e1; font-family: monospace; font-size: 0.85rem;
+      margin-bottom: 1rem;
+    }
+    input:focus { outline: none; border-color: #f00; }
+    button {
+      width: 100%; padding: 0.7rem; background: #f00; color: #fff;
+      border: none; border-radius: 8px; font-size: 0.95rem; cursor: pointer; font-weight: 600;
+    }
+    button:hover { background: #d00; }
+    .result {
+      margin-top: 1.25rem; padding: 0.75rem; background: #1a1a1a;
+      border: 1px solid #333; border-radius: 8px; display: none;
+    }
+    .result.show { display: block; }
+    .result label { color: #30d158; margin-bottom: 0.25rem; }
+    .result code {
+      display: block; word-break: break-all; font-size: 0.8rem; color: #fff;
+      padding: 0.5rem; background: #0f0f0f; border-radius: 4px; user-select: all;
+    }
+    .steps {
+      margin-top: 1rem; padding: 0.75rem; background: #1a1a1a;
+      border: 1px solid #333; border-radius: 8px; font-size: 0.8rem; color: #aaa; line-height: 1.6;
+    }
+    .steps strong { color: #ccc; }
+    .steps code { display: inline; padding: 2px 4px; background: #0f0f0f; border-radius: 3px; }
+    .steps a { color: #f00; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>YouTube Music</h1>
+    <p class="subtitle">Stream and browse your YouTube Music library.</p>
+
+    <form id="form">
+      <label for="refreshToken">Google OAuth Refresh Token</label>
+      <input type="text" id="refreshToken" placeholder="Paste refresh token here">
+      <button type="submit">Generate Addon URL</button>
+    </form>
+
+    <div class="result" id="result">
+      <label>Addon URL:</label>
+      <code id="addonUrl"></code>
+    </div>
+
+    <div class="steps">
+      <strong>Getting your token:</strong><br>
+      1. Install <a href="https://proxyman.io" target="_blank">Proxyman</a> and enable HTTPS decryption for <code>oauthaccountmanager.googleapis.com</code><br>
+      2. Open the YouTube Music iOS app<br>
+      3. Find the request to <code>/v1/issuetoken</code><br>
+      4. Copy the <code>Authorization: Bearer</code> header value
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById("form");
+    const refreshTokenEl = document.getElementById("refreshToken");
+    const resultEl = document.getElementById("result");
+    const urlEl = document.getElementById("addonUrl");
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const refreshToken = refreshTokenEl.value.trim();
+      if (!refreshToken) return alert("Enter your refresh token");
+
+      const config = { refreshToken };
+      const encoded = btoa(JSON.stringify(config));
+      const url = `{{BASE_URL}}/${encoded}/manifest.json`;
+      urlEl.textContent = url;
+      resultEl.classList.add("show");
+    });
+  </script>
+</body>
+</html>

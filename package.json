@@ -1,0 +1,33 @@
+{
+  "name": "resonance-addons",
+  "description": "Resonance Addons is a collection of music provider addons for Resonance.",
+  "author": "Dominic Frye <me@itsnebula.net>",
+  "license": "GPL-3.0",
+  "version": "1.0.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/itsnebulalol/resonance-addons"
+  },
+  "homepage": "https://github.com/itsnebulalol/resonance-addons",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "bun --filter '*' dev",
+    "dev:ytm": "bun run --filter @resonance-addons/ytm-addon dev",
+    "dev:am": "bun run --filter @resonance-addons/am-addon dev",
+    "dev:spotify": "bun run --filter @resonance-addons/spotify-addon dev",
+    "dev:torbox": "bun run --filter @resonance-addons/torbox-addon dev",
+    "check": "biome check --write .",
+    "check:ci": "biome ci .",
+    "lint": "biome lint .",
+    "format": "biome format --write ."
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.6",
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
