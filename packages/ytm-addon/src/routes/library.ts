@@ -185,8 +185,9 @@ function parseAlbums(renderers: any[]): HomeItem[] {
 function parseArtists(renderers: any[]): HomeItem[] {
   const items: HomeItem[] = [];
   for (const renderer of renderers) {
-    const browseId = renderer.navigationEndpoint?.browseEndpoint?.browseId;
-    if (!browseId) continue;
+    const rawId = renderer.navigationEndpoint?.browseEndpoint?.browseId;
+    if (!rawId) continue;
+    const browseId = rawId.startsWith("MPLA") ? rawId.slice(4) : rawId;
 
     const name = renderer.title?.runs?.[0]?.text ?? "";
 
