@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
   <title>TorBox - Resonance</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -37,6 +37,19 @@
       display: block; word-break: break-all; font-size: 0.8rem; color: #fff;
       padding: 0.5rem; background: #0f0f0f; border-radius: 4px; user-select: all;
     }
+    .result-buttons { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
+    .install-btn {
+      flex: 1; display: block; padding: 0.7rem; background: #49de80; color: #000;
+      border-radius: 8px; font-size: 0.95rem; font-weight: 600;
+      text-decoration: none; text-align: center; transition: background 0.15s;
+    }
+    .install-btn:hover { background: #3bc96e; }
+    .copy-btn {
+      flex: 1; padding: 0.7rem; background: transparent; color: #49de80;
+      border: 1px solid #49de80; border-radius: 8px; font-size: 0.95rem; font-weight: 600;
+      cursor: pointer; font-family: inherit; transition: background 0.15s;
+    }
+    .copy-btn:hover { background: rgba(73,222,128,0.1); }
     .steps {
       margin-top: 1rem; padding: 0.75rem; background: #1a1a1a;
       border: 1px solid #333; border-radius: 8px; font-size: 0.8rem; color: #aaa; line-height: 1.6;
@@ -107,6 +120,10 @@
     <div class="result" id="result">
       <label>Addon URL:</label>
       <code id="addonUrl"></code>
+      <div class="result-buttons">
+        <a class="install-btn" id="installBtn" href="#">Install in Resonance</a>
+        <button type="button" class="copy-btn" id="copyBtn">Copy URL</button>
+      </div>
     </div>
 
     <div class="steps">
@@ -149,8 +166,32 @@
       const encoded = btoa(JSON.stringify(config));
       const url = `{{BASE_URL}}/${encoded}/manifest.json`;
       urlEl.textContent = url;
+      document.getElementById("installBtn").href = `resonance://install-addon?url=${encodeURIComponent(url)}`;
       resultEl.classList.add("show");
       document.getElementById("donateModal").classList.add("show");
+    });
+
+    function copyText(text) {
+      if (navigator.clipboard && window.isSecureContext) {
+        return navigator.clipboard.writeText(text);
+      }
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.cssText = "position:fixed;left:-9999px";
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      return Promise.resolve();
+    }
+
+    document.getElementById("copyBtn").addEventListener("click", () => {
+      copyText(urlEl.textContent).then(() => {
+        const btn = document.getElementById("copyBtn");
+        btn.textContent = "Copied!";
+        setTimeout(() => btn.textContent = "Copy URL", 2000);
+      });
     });
 
     const modal = document.getElementById("donateModal");
