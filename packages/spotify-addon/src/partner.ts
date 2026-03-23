@@ -29,6 +29,7 @@ export const OP = {
 
 let clientTokenCache: { token: string; expires: number } | null = null;
 const deviceId = crypto.randomUUID();
+let pendingClientToken: Promise<string> | null = null;
 
 const cuimp = createCuimpHttp({
   descriptor: { browser: "chrome", version: "136" },
@@ -43,36 +44,46 @@ async function getClientToken(): Promise<string> {
     return clientTokenCache.token;
   }
 
-  const res = await fetch("https://clienttoken.spotify.com/v1/clienttoken", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
-    body: JSON.stringify({
-      client_data: {
-        client_version: APP_VERSION,
-        client_id: CLIENT_ID,
-        js_sdk_data: {
-          device_brand: "Apple",
-          device_model: "unknown",
-          os: "macos",
-          os_version: "10.15.7",
-          device_id: deviceId,
-          device_type: "computer",
+  if (pendingClientToken) return pendingClientToken;
+
+  const promise = (async () => {
+    const res = await fetch("https://clienttoken.spotify.com/v1/clienttoken", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({
+        client_data: {
+          client_version: APP_VERSION,
+          client_id: CLIENT_ID,
+          js_sdk_data: {
+            device_brand: "Apple",
+            device_model: "unknown",
+            os: "macos",
+            os_version: "10.15.7",
+            device_id: deviceId,
+            device_type: "computer",
+          },
         },
-      },
-    }),
+      }),
+    });
+
+    const data = (await res.json()) as any;
+    const token = data.granted_token.token;
+    const expiresInSec = data.granted_token.expires_after_seconds ?? 7200;
+
+    clientTokenCache = {
+      token,
+      expires: Date.now() + (expiresInSec - 60) * 1000,
+    };
+
+    console.log("[partner] Client token acquired");
+    return token;
+  })();
+
+  pendingClientToken = promise;
+  promise.finally(() => {
+    pendingClientToken = null;
   });
-
-  const data = (await res.json()) as any;
-  const token = data.granted_token.token;
-  const expiresInSec = data.granted_token.expires_after_seconds ?? 7200;
-
-  clientTokenCache = {
-    token,
-    expires: Date.now() + (expiresInSec - 60) * 1000,
-  };
-
-  console.log("[partner] Client token acquired");
-  return token;
+  return promise;
 }
 
 export async function partnerQuery(
