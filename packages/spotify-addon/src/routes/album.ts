@@ -1,5 +1,13 @@
 import { OP, partnerQuery } from "../partner";
-import { bestImage, errorResponse, formatDurationMs, json, PROVIDER_ID, uriToId } from "../utils";
+import {
+  bestImage,
+  errorResponse,
+  formatDurationMs,
+  isOnDeviceFetchSignal,
+  json,
+  PROVIDER_ID,
+  uriToId,
+} from "../utils";
 
 export async function handleAlbum(spDc: string, albumId: string): Promise<Response> {
   try {
@@ -62,6 +70,9 @@ export async function handleAlbum(spDc: string, albumId: string): Promise<Respon
       playlistId: albumId,
     });
   } catch (e: any) {
+    if (isOnDeviceFetchSignal(e)) {
+      throw e;
+    }
     console.error("Album error:", e.message);
     return errorResponse(e.message, 500);
   }

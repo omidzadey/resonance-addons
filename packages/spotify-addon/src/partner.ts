@@ -1,5 +1,4 @@
-import { createCuimpHttp } from "cuimp";
-import { getAccessToken } from "./auth";
+import { getAccessToken, spotifyFetch } from "./auth";
 
 const APP_VERSION = "1.2.85.84.g58d1df8c";
 const CLIENT_ID = "d8a5ed958d274c2e8ee717e6a4b0971d";
@@ -31,10 +30,6 @@ let clientTokenCache: { token: string; expires: number } | null = null;
 const deviceId = crypto.randomUUID();
 let pendingClientToken: Promise<string> | null = null;
 
-const cuimp = createCuimpHttp({
-  descriptor: { browser: "chrome", version: "136" },
-});
-
 export async function prewarmClientToken(): Promise<void> {
   await getClientToken();
 }
@@ -47,24 +42,33 @@ async function getClientToken(): Promise<string> {
   if (pendingClientToken) return pendingClientToken;
 
   const promise = (async () => {
-    const res = await fetch("https://clienttoken.spotify.com/v1/clienttoken", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify({
-        client_data: {
-          client_version: APP_VERSION,
-          client_id: CLIENT_ID,
-          js_sdk_data: {
-            device_brand: "Apple",
-            device_model: "unknown",
-            os: "macos",
-            os_version: "10.15.7",
-            device_id: deviceId,
-            device_type: "computer",
+    const res = await spotifyFetch(
+      "https://clienttoken.spotify.com/v1/clienttoken",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({
+          client_data: {
+            client_version: APP_VERSION,
+            client_id: CLIENT_ID,
+            js_sdk_data: {
+              device_brand: "Apple",
+              device_model: "unknown",
+              os: "macos",
+              os_version: "10.15.7",
+              device_id: deviceId,
+              device_type: "computer",
+            },
           },
-        },
-      }),
-    });
+        }),
+      },
+      { cacheable: true },
+    );
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Client token exchange failed (${res.status}): ${text.slice(0, 300)}`);
+    }
 
     const data = (await res.json()) as any;
     const token = data.granted_token.token;
@@ -80,9 +84,11 @@ async function getClientToken(): Promise<string> {
   })();
 
   pendingClientToken = promise;
-  promise.finally(() => {
-    pendingClientToken = null;
-  });
+  void promise
+    .finally(() => {
+      pendingClientToken = null;
+    })
+    .catch(() => {});
   return promise;
 }
 
@@ -93,33 +99,35 @@ export async function partnerQuery(
 ): Promise<any> {
   const [accessToken, clientToken] = await Promise.all([getAccessToken(spDc), getClientToken()]);
 
-  const res = await cuimp.post(
+  const res = await spotifyFetch(
     "https://api-partner.spotify.com/pathfinder/v2/query",
     {
-      operationName: op.name,
-      variables,
-      extensions: {
-        persistedQuery: { version: 1, sha256Hash: op.hash },
-      },
-    },
-    {
+      method: "POST",
       headers: {
-        authorization: `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         "client-token": clientToken,
         "app-platform": "WebPlayer",
         "spotify-app-version": APP_VERSION,
-        "content-type": "application/json;charset=UTF-8",
-        accept: "application/json",
-        origin: "https://open.spotify.com",
-        referer: "https://open.spotify.com/",
+        "Content-Type": "application/json;charset=UTF-8",
+        Accept: "application/json",
+        Origin: "https://open.spotify.com",
+        Referer: "https://open.spotify.com/",
       },
-      maxRedirects: 0,
+      body: JSON.stringify({
+        operationName: op.name,
+        variables,
+        extensions: {
+          persistedQuery: { version: 1, sha256Hash: op.hash },
+        },
+      }),
     },
+    { cacheable: true },
   );
 
+  const data = (await res.json()) as any;
   if (res.status !== 200) {
-    throw new Error(`api-partner ${op.name} failed (${res.status}): ${JSON.stringify(res.data).slice(0, 300)}`);
+    throw new Error(`api-partner ${op.name} failed (${res.status}): ${JSON.stringify(data).slice(0, 300)}`);
   }
 
-  return res.data;
+  return data;
 }

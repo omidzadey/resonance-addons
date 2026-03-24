@@ -1,5 +1,13 @@
 import { OP, partnerQuery } from "../partner";
-import { bestImage, errorResponse, formatDurationMs, json, PROVIDER_ID, uriToId } from "../utils";
+import {
+  bestImage,
+  errorResponse,
+  formatDurationMs,
+  isOnDeviceFetchSignal,
+  json,
+  PROVIDER_ID,
+  uriToId,
+} from "../utils";
 
 const PAGE_SIZE = 50;
 
@@ -262,6 +270,9 @@ export async function handleLibrary(spDc: string, type?: string, continuation?: 
       continuation: null,
     });
   } catch (e: any) {
+    if (isOnDeviceFetchSignal(e)) {
+      throw e;
+    }
     console.error("Library error:", e.message);
     return errorResponse(e.message, 500);
   }

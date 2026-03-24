@@ -1,4 +1,4 @@
-import { getAccessToken } from "../auth";
+import { getAccessToken, spotifyFetch } from "../auth";
 import { corsHeaders } from "../utils";
 
 function encodeVarint(value: number): number[] {
@@ -41,22 +41,25 @@ export async function handleTTS(spDc: string, req: Request): Promise<Response> {
     ...encodeVarintField(7, 44100),
   ]);
 
-  const res = await fetch("https://spclient.wg.spotify.com/client-tts/v1/fulfill", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/x-www-form-urlencoded",
+  const res = await spotifyFetch(
+    "https://spclient.wg.spotify.com/client-tts/v1/fulfill",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: proto,
     },
-    body: proto,
-    redirect: "manual",
-  });
+    { cacheable: true },
+  );
 
   if (res.status === 303) {
     const location = res.headers.get("Location");
     if (!location) {
       return new Response("Missing redirect location", { status: 502, headers: corsHeaders() });
     }
-    const audioRes = await fetch(location);
+    const audioRes = await spotifyFetch(location, {}, { cacheable: false });
     const audioData = await audioRes.arrayBuffer();
     return new Response(audioData, {
       headers: {

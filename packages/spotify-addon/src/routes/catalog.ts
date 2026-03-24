@@ -1,16 +1,19 @@
-import { getAccessToken } from "../auth";
-import { errorResponse, json, PROVIDER_ID, uriToId } from "../utils";
+import { getAccessToken, spotifyFetch } from "../auth";
+import { errorResponse, isOnDeviceFetchSignal, json, PROVIDER_ID, uriToId } from "../utils";
 
 export async function handleHome(spDc: string): Promise<Response> {
   try {
     const token = await getAccessToken(spDc);
-    const res = await fetch("https://spclient.wg.spotify.com/homeview/v1/home?market=US&platform=web&locale=en", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "app-platform": "WebPlayer",
-        Accept: "application/json",
+    const res = await spotifyFetch(
+      "https://spclient.wg.spotify.com/homeview/v1/home?market=US&platform=web&locale=en",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "app-platform": "WebPlayer",
+          Accept: "application/json",
+        },
       },
-    });
+    );
 
     if (!res.ok) {
       return errorResponse(`Home feed failed (${res.status})`, res.status);
@@ -69,6 +72,9 @@ export async function handleHome(spDc: string): Promise<Response> {
       continuation: null,
     });
   } catch (e: any) {
+    if (isOnDeviceFetchSignal(e)) {
+      throw e;
+    }
     console.error("Home feed error:", e.message);
     return errorResponse(e.message, 500);
   }

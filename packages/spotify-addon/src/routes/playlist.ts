@@ -1,6 +1,14 @@
-import { getAccessToken } from "../auth";
+import { getAccessToken, spotifyFetch } from "../auth";
 import { OP, partnerQuery } from "../partner";
-import { bestImage, errorResponse, formatDurationMs, json, PROVIDER_ID, uriToId } from "../utils";
+import {
+  bestImage,
+  errorResponse,
+  formatDurationMs,
+  isOnDeviceFetchSignal,
+  json,
+  PROVIDER_ID,
+  uriToId,
+} from "../utils";
 
 function parseLikedTrack(item: any) {
   const t = item.track?.data;
@@ -91,6 +99,9 @@ export async function handleLikedSongs(spDc: string): Promise<Response> {
       continuation,
     });
   } catch (e: any) {
+    if (isOnDeviceFetchSignal(e)) {
+      throw e;
+    }
     console.error("Liked songs error:", e.message);
     return errorResponse(e.message, 500);
   }
@@ -131,6 +142,9 @@ export async function handlePlaylist(spDc: string, playlistId: string): Promise<
       continuation,
     });
   } catch (e: any) {
+    if (isOnDeviceFetchSignal(e)) {
+      throw e;
+    }
     console.error("Playlist error:", e.message);
     return errorResponse(e.message, 500);
   }
@@ -163,6 +177,9 @@ export async function handlePlaylistMore(spDc: string, playlistId: string, conti
 
     return json({ tracks, continuation: nextContinuation });
   } catch (e: any) {
+    if (isOnDeviceFetchSignal(e)) {
+      throw e;
+    }
     console.error("Playlist more error:", e.message);
     return errorResponse(e.message, 500);
   }
@@ -180,7 +197,7 @@ export async function handleAddToPlaylist(
 
     const token = await getAccessToken(spDc);
 
-    const res = await fetch(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, {
+    const res = await spotifyFetch(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -196,6 +213,9 @@ export async function handleAddToPlaylist(
 
     return json({ success: true });
   } catch (e: any) {
+    if (isOnDeviceFetchSignal(e)) {
+      throw e;
+    }
     console.error("Add to playlist error:", e.message);
     return errorResponse(e.message, 500);
   }

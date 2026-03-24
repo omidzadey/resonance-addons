@@ -1,5 +1,5 @@
-import { getAccessToken } from "../auth";
-import { formatDurationSec, json, PROVIDER_ID, uriToId } from "../utils";
+import { getAccessToken, spotifyFetch } from "../auth";
+import { formatDurationSec, isOnDeviceFetchSignal, json, PROVIDER_ID, uriToId } from "../utils";
 
 interface SearchHit {
   uri: string;
@@ -26,7 +26,7 @@ export async function searchSpotifyTrack(
   artist: string,
 ): Promise<{ id: string; image: string | null } | null> {
   const query = encodeURIComponent(`${title} ${artist}`);
-  const res = await fetch(
+  const res = await spotifyFetch(
     `https://spclient.wg.spotify.com/searchview/km/v4/search/${query}?limit=5&entityType=track&catalogue=&country=US&locale=en&platform=web`,
     {
       headers: {
@@ -62,7 +62,7 @@ export async function handleSearch(spDc: string, query: string, filter?: string)
   try {
     const token = await getAccessToken(spDc);
     const encoded = encodeURIComponent(query);
-    const res = await fetch(
+    const res = await spotifyFetch(
       `https://spclient.wg.spotify.com/searchview/km/v4/search/${encoded}?limit=20&entityType=track,album,artist,playlist&catalogue=&country=US&locale=en&platform=web`,
       {
         headers: {
@@ -156,6 +156,9 @@ export async function handleSearch(spDc: string, query: string, filter?: string)
 
     return json(items);
   } catch (e: any) {
+    if (isOnDeviceFetchSignal(e)) {
+      throw e;
+    }
     console.error("Search error:", e.message);
     return json([]);
   }
@@ -165,7 +168,7 @@ export async function handleSearchSuggestions(spDc: string, query: string): Prom
   try {
     const token = await getAccessToken(spDc);
     const encoded = encodeURIComponent(query);
-    const res = await fetch(
+    const res = await spotifyFetch(
       `https://spclient.wg.spotify.com/searchview/km/v4/suggestions/${encoded}?limit=10&catalogue=&country=US&locale=en&platform=web`,
       {
         headers: {
@@ -191,6 +194,9 @@ export async function handleSearchSuggestions(spDc: string, query: string): Prom
 
     return json(suggestions);
   } catch (e: any) {
+    if (isOnDeviceFetchSignal(e)) {
+      throw e;
+    }
     console.error("Search suggestions error:", e.message);
     return json([]);
   }

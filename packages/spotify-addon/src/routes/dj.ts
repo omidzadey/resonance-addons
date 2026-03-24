@@ -1,6 +1,14 @@
-import { getAccessToken } from "../auth";
+import { getAccessToken, spotifyFetch } from "../auth";
 import { OP, partnerQuery } from "../partner";
-import { bestImage, errorResponse, formatDurationMs, json, PROVIDER_ID, uriToId } from "../utils";
+import {
+  bestImage,
+  errorResponse,
+  formatDurationMs,
+  isOnDeviceFetchSignal,
+  json,
+  PROVIDER_ID,
+  uriToId,
+} from "../utils";
 
 const DJ_CONTEXT_URI = "spotify:playlist:37i9dQZF1EYkqdzj48dyYq";
 const DJ_COVER = "https://lexicon-assets.spotifycdn.com/DJ-Beta-CoverArt-300.jpg";
@@ -16,7 +24,7 @@ interface LexiconPage {
 }
 
 async function fetchLexiconSession(token: string, url: string): Promise<LexiconPage> {
-  const res = await fetch(url, {
+  const res = await spotifyFetch(url, {
     headers: {
       Authorization: `Bearer ${token}`,
       "app-platform": "WebPlayer",
@@ -112,6 +120,9 @@ export async function handleDJPlaylist(spDc: string): Promise<Response> {
       continuation: null,
     });
   } catch (e: any) {
+    if (isOnDeviceFetchSignal(e)) {
+      throw e;
+    }
     console.error("DJ playlist error:", e.message);
     return errorResponse(e.message, 500);
   }

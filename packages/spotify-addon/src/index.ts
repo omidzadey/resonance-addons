@@ -1,6 +1,4 @@
 import { createAddon } from "@resonance-addons/sdk";
-import { scrapeSecret } from "./auth";
-import { prewarmClientToken } from "./partner";
 import { handleAlbum } from "./routes/album";
 import { handleArtist } from "./routes/artist";
 import { handleHome } from "./routes/catalog";
@@ -43,14 +41,19 @@ const addon = createAddon<SpotifyConfig>({
   },
 
   configurePage: `${import.meta.dir}/../templates/configure.html`,
+  onDeviceFetchHosts: [
+    "open.spotify.com",
+    "open.spotifycdn.com",
+    "clienttoken.spotify.com",
+    "api-partner.spotify.com",
+    "api.spotify.com",
+    "spclient.wg.spotify.com",
+    "*.scdn.co",
+  ],
 
   parseConfig: (raw) => {
     if (!raw.spDc) throw new Error("Missing spDc");
     return { spDc: raw.spDc as string };
-  },
-
-  onStart: () => {
-    Promise.all([scrapeSecret(), prewarmClientToken()]).catch(() => {});
   },
 
   catalog: {

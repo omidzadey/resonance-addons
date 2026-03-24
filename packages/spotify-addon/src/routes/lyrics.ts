@@ -1,4 +1,4 @@
-import { getAccessToken } from "../auth";
+import { getAccessToken, spotifyFetch } from "../auth";
 import { json } from "../utils";
 import { searchSpotifyTrack } from "./search";
 
@@ -36,7 +36,7 @@ export async function handleLyrics(
   if (!result) return json(null);
   const spotifyTrackId = result.id;
 
-  const res = await fetch(
+  const res = await spotifyFetch(
     `https://spclient.wg.spotify.com/color-lyrics/v2/track/${spotifyTrackId}/image/spotify%3Aimage%3Aab67616d0000b273?format=json&vocalRemoval=false&market=from_token`,
     {
       headers: {
